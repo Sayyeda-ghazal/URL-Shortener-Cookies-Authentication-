@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const cors = require('cors');
 const cookieParser = require('cookie-parser')
 
 
@@ -7,7 +8,7 @@ const urlRoute = require('./routes/url');
 const staticRoute = require('./routes/staticrouter');
 const UserRoute = require('./routes/user')
 
-const { restrictToLoggedInUserOnly } = require('./middlewares/auth')
+const { restrictToLoggedInUserOnly , checkAuth} = require('./middlewares/auth')
 const {ConnectToMongoDB} = require('./connect');
 const URL = require('./models/url');
 
@@ -19,6 +20,7 @@ ConnectToMongoDB("mongodb://localhost:27017/app-1").then(() => console.log('DB c
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 app.use(cookieParser());
+app.use(cors());
 
 app.set("view engine", "ejs");
 app.set('views', path.resolve("./views"));
@@ -31,7 +33,7 @@ app.set('views', path.resolve("./views"));
 // });
 
 app.use('/url', restrictToLoggedInUserOnly, urlRoute);
-app.use('/', staticRoute);
+app.use('/', checkAuth, staticRoute);
 app.use('/user', UserRoute);
 
 app.get('/:shortId',async (req, res) => {
